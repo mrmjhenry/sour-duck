@@ -60,6 +60,14 @@ sour-duck/
 │   ├── MANIFEST.txt                  # File manifest
 │   └── CLAUDE.md                     # This file
 │
+├── Educational Materials (NEW)
+│   ├── README.md                     # Education guide and overview
+│   ├── 01_quiver_representations.md  # Quiver theory explanation
+│   ├── 02_moduli_space.md            # Moduli space theory
+│   └── manim_animations/             # Manim visualizations
+│       ├── quiver_visualization.py        # Quiver extraction animations
+│       └── moduli_space_visualization.py  # Moduli space animations
+│
 └── Generated Assets
     ├── demo_results.json             # Demonstration results
     └── moduli_analysis_demo.png      # Visualization output (104KB)
@@ -589,6 +597,17 @@ Importance = usage_rate × √variance × (1 + information_content)
 ---
 
 ## Changelog
+
+**2025-12-04**: Added Educational Materials (Issue: "Create educational materials for quiver representations and moduli space")
+- Created `education/` folder with comprehensive learning materials
+- Added `01_quiver_representations.md` - Complete theory explanation (10KB)
+- Added `02_moduli_space.md` - Moduli space derivation and concepts (12KB)
+- Created `manim_animations/quiver_visualization.py` - 4 animated scenes
+- Created `manim_animations/moduli_space_visualization.py` - 3 animated scenes
+- Includes ManimML integration for neural network visualization
+- Covers: vertices, edges, paths, dimension formula, data representation
+- Provides step-by-step guide with code examples
+- Visualizations demonstrate theoretical concepts interactively
 
 **2025-12-04**: Added ResNet-18 Architecture Support (Issue: "Implement ResNet-18 version")
 - Added `resnet18_cifar.py` with ResNet-18 adapted for CIFAR-10
