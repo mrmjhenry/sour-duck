@@ -68,6 +68,36 @@ python experiments.py --full
 python analysis.py
 ```
 
+### Using Simple Test Data
+
+We provide ready-to-use test datasets for quick experimentation:
+
+```python
+from simple_test_data import load_example_dataset, load_dataset
+
+# Quick start with pre-defined datasets
+X, y = load_example_dataset('xor')  # or 'tiny', 'small', 'spiral', etc.
+
+# Or load saved datasets
+X, y, metadata = load_dataset('examples/small_binary.npz')
+```
+
+Generate example datasets:
+
+```bash
+# Create all example datasets in examples/ directory
+python generate_examples.py
+```
+
+Available test datasets:
+- **tiny_binary**: 50 samples, 5 features - quick testing
+- **small_binary**: 100 samples, 10 features - standard testing
+- **xor**: 200 samples, 2 features - non-linear problem
+- **spiral**: 300 samples, 2 features - complex 3-class problem
+- **large_multiclass**: 1000 samples, 50 features - realistic scale
+
+See `TESTING_GUIDE.md` and `examples/README.md` for complete documentation.
+
 ## Methodology
 
 ### 1. Data Representation (W_x^f)
@@ -147,11 +177,16 @@ moduli_pruning/
 ├── moduli_space_pruning.py  # Core implementation
 ├── experiments.py            # Experimental framework
 ├── analysis.py              # Analysis and visualization
-├── results/                 # Experimental results
-│   ├── experiment_results.csv
-│   ├── comprehensive_results.png
-│   ├── moduli_analysis_*.png
-│   └── analysis_report.txt
+├── simple_test_data.py      # Test data generators
+├── generate_examples.py     # Generate example datasets
+├── examples/                # Pre-generated test datasets
+│   ├── README.md            # Dataset documentation
+│   ├── tiny_binary.npz
+│   ├── small_binary.npz
+│   ├── xor.npz
+│   ├── spiral.npz
+│   └── ...
+├── TESTING_GUIDE.md         # Complete testing guide
 └── README.md                # This file
 ```
 

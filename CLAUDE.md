@@ -30,6 +30,17 @@ sour-duck/
 │   ├── optimized_extraction.py       # Optimized coordinate extraction
 │   └── moduli_space_pruning.py      # Contains optimization improvements
 │
+├── Test Data & Examples
+│   ├── simple_test_data.py          # Test data generators (NEW)
+│   ├── generate_examples.py         # Generate example datasets (NEW)
+│   └── examples/                    # Pre-generated datasets (NEW)
+│       ├── README.md                # Dataset documentation
+│       ├── tiny_binary.npz          # 50 samples, quick tests
+│       ├── small_binary.npz         # 100 samples, standard tests
+│       ├── xor.npz                  # Non-linear problem
+│       ├── spiral.npz               # Complex 3-class problem
+│       └── large_multiclass.npz     # 1000 samples, realistic scale
+│
 ├── Bug Fixes & Tests
 │   ├── fix_inhomogeneous_array.py   # Fixes for array dimension issues
 │   ├── fix_layer_indexing.py        # Fixes for layer indexing problems
@@ -42,6 +53,7 @@ sour-duck/
 │   ├── README.md                     # Complete user documentation (8KB)
 │   ├── SUMMARY.md                    # Implementation summary (8KB)
 │   ├── OPTIMIZATION_GUIDE.md         # Performance optimization guide
+│   ├── TESTING_GUIDE.md              # Test data usage guide (NEW)
 │   ├── MANIFEST.txt                  # File manifest
 │   └── CLAUDE.md                     # This file
 │
@@ -138,7 +150,34 @@ Pruning decisions are invariant under:
 
 ## Key Development Workflows
 
-### 1. Running Quick Tests
+### 1. Using Simple Test Data (NEW)
+
+```python
+from simple_test_data import load_example_dataset, load_dataset
+
+# Quick start with pre-defined datasets
+X, y = load_example_dataset('xor')  # Also: 'tiny', 'small', 'spiral'
+
+# Load with metadata
+X, y, metadata = load_dataset('examples/small_binary.npz')
+print(f"Dataset: {metadata['description']}")
+```
+
+Generate example datasets:
+```bash
+python generate_examples.py  # Creates all examples in examples/ directory
+```
+
+**Available test datasets:**
+- `tiny_binary.npz`: 50 samples, 5 features - fastest for unit tests
+- `small_binary.npz`: 100 samples, 10 features - standard testing
+- `xor.npz`: 200 samples, 2 features - non-linear problem
+- `spiral.npz`: 300 samples, 2 features - complex 3-class
+- `large_multiclass.npz`: 1000 samples, 50 features - realistic scale
+
+See `TESTING_GUIDE.md` for complete documentation and workflows.
+
+### 2. Running Quick Tests
 ```bash
 # Standalone demo (no PyTorch required)
 python demo_simplified.py
@@ -150,7 +189,7 @@ python experiments.py
 python test_moduli_pruning.py
 ```
 
-### 2. Analyzing a Network
+### 3. Analyzing a Network
 ```python
 from moduli_space_pruning import ModuliSpaceAnalyzer, ModuliSpacePruner
 
@@ -165,7 +204,7 @@ print(f"Total coordinates: {analyzer.total_coordinates}")
 print(f"Moduli dimension: {analyzer.moduli_dimension}")
 ```
 
-### 3. Pruning a Network
+### 4. Pruning a Network
 ```python
 # Create pruner
 pruner = ModuliSpacePruner(network, analyzer)
@@ -177,7 +216,7 @@ pruned_network, masks = pruner.prune(pruning_ratio=0.3)
 # ... standard training loop ...
 ```
 
-### 4. Visualization & Analysis
+### 5. Visualization & Analysis
 ```bash
 # Generate comprehensive visualizations
 python analysis.py
@@ -540,6 +579,14 @@ Importance = usage_rate × √variance × (1 + information_content)
 ---
 
 ## Changelog
+
+**2025-12-04**: Added Simple Test Data Examples (Issue: "Create more simple testing data example")
+- Added `simple_test_data.py` with comprehensive data generators
+- Created `generate_examples.py` to generate pre-made datasets
+- Added `examples/` directory with 7 ready-to-use datasets
+- Created `TESTING_GUIDE.md` with complete testing workflows
+- Added `examples/README.md` documenting all datasets
+- Updated README.md and CLAUDE.md with test data documentation
 
 **2025-12-04**: Initial CLAUDE.md creation
 - Comprehensive codebase structure documentation
