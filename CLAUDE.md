@@ -22,6 +22,8 @@ sour-duck/
 │   ├── moduli_space_pruning.py      # Main implementation (17KB)
 │   ├── experiments.py                # Experimental framework (21KB)
 │   ├── experiments_fixed.py          # Fixed version with dimension corrections
+│   ├── experiments_resnet18.py       # ResNet-18 specific experiments (NEW)
+│   ├── resnet18_cifar.py             # ResNet-18 for CIFAR-10 (NEW)
 │   ├── analysis.py                   # Visualization and analysis (19KB)
 │   └── demo_simplified.py            # Standalone NumPy demo (14KB)
 │
@@ -46,6 +48,7 @@ sour-duck/
 │   ├── fix_layer_indexing.py        # Fixes for layer indexing problems
 │   ├── fix_unpacking_error.py       # Fixes for unpacking errors
 │   ├── test_moduli_pruning.py       # Comprehensive test suite (12KB)
+│   ├── test_resnet18.py              # ResNet-18 compatibility tests (NEW)
 │   ├── test_dimension_fix.py        # Dimension-specific tests
 │   └── test_all_fixes.py            # Integration tests for all fixes
 │
@@ -119,9 +122,11 @@ Compares moduli space pruning against baselines:
 - **Random Pruning**: Baseline
 - **Structured Pruning**: Layer-wise structured pruning
 
-**Architectures Tested**:
+**Architectures Supported**:
 - `SimpleNet`: Lightweight CNN for quick experiments
 - `VGG11_Small`: Scaled-down VGG for CIFAR-10
+- `ResNet18_CIFAR`: ResNet-18 adapted for CIFAR-10 (32x32 images, ~11M params)
+- `ResNet18_CIFAR_Small`: Smaller ResNet-18 variant (~3M params, faster testing)
 
 ---
 
@@ -185,8 +190,13 @@ python demo_simplified.py
 # Full experimental suite
 python experiments.py
 
+# ResNet-18 experiments (NEW)
+python experiments_resnet18.py --quick
+python experiments_resnet18.py --small  # Faster with smaller model
+
 # Run tests
 python test_moduli_pruning.py
+python test_resnet18.py  # Test ResNet-18 compatibility
 ```
 
 ### 3. Analyzing a Network
@@ -579,6 +589,16 @@ Importance = usage_rate × √variance × (1 + information_content)
 ---
 
 ## Changelog
+
+**2025-12-04**: Added ResNet-18 Architecture Support (Issue: "Implement ResNet-18 version")
+- Added `resnet18_cifar.py` with ResNet-18 adapted for CIFAR-10
+- Implemented both standard and small variants
+- Created `experiments_resnet18.py` for dedicated ResNet-18 experiments
+- Added `test_resnet18.py` comprehensive test suite (6 tests)
+- Verified compatibility with moduli space pruning framework
+- Updated experiments.py to support ResNet-18
+- Supports residual connections correctly (non-parametric additions)
+- Total parameters: ~11M (standard), ~3M (small)
 
 **2025-12-04**: Added Simple Test Data Examples (Issue: "Create more simple testing data example")
 - Added `simple_test_data.py` with comprehensive data generators

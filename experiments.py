@@ -25,6 +25,7 @@ warnings.filterwarnings('ignore')
 from moduli_space_pruning import (
     ModuliSpaceAnalyzer, ModuliSpacePruner, DataRepresentation
 )
+from resnet18_cifar import create_resnet18_cifar10
 
 # Set style for better plots
 sns.set_style("whitegrid")
@@ -382,7 +383,8 @@ class ExperimentRunner:
         # Experiment configurations
         methods = ['moduli_space', 'magnitude', 'random', 'structured']
         pruning_ratios = [0.3, 0.5, 0.7]
-        networks = [SimpleNet]  # Start with SimpleNet, add VGG11_Small if it works
+        # Available networks: SimpleNet, VGG11_Small, or lambda: create_resnet18_cifar10(small=True)
+        networks = [SimpleNet]  # Start with SimpleNet
         
         all_results = []
         
