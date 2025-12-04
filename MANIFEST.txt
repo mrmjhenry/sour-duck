@@ -1,0 +1,53 @@
+MODULI SPACE PRUNING IMPLEMENTATION - FILE MANIFEST
+====================================================
+
+Package Contents:
+-----------------
+
+Core Implementation:
+  • moduli_space_pruning.py - Main implementation (14.2 KB)
+  • experiments.py - Experimental framework (19.3 KB)
+  • analysis.py - Analysis and visualization tools (19.2 KB)
+  • demo_simplified.py - Standalone demonstration (14.4 KB)
+  
+Testing:
+  • test_moduli_pruning.py - Comprehensive test suite (11.8 KB)
+
+Documentation:
+  • README.md - Complete documentation (7.8 KB)
+  • SUMMARY.md - Implementation summary (7.6 KB)
+
+Generated Files:
+  • demo_results.json - Demonstration results
+  • moduli_analysis_demo.png - Visualization output (104 KB)
+
+Virtual Environment (if needed):
+  • venv/ - Python virtual environment directory
+
+Installation:
+-------------
+1. Extract the archive
+2. Create a virtual environment: python3 -m venv venv
+3. Activate it: source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
+4. Install dependencies: pip install torch torchvision numpy pandas matplotlib seaborn scikit-learn tqdm plotly
+
+Quick Start:
+------------
+For a quick demonstration without PyTorch:
+  python demo_simplified.py
+
+For full experiments (requires PyTorch):
+  python experiments.py
+
+For analysis and visualization:
+  python analysis.py
+
+Testing:
+  python test_moduli_pruning.py
+
+Total Package Size: ~4.2 MB compressed
+
+Contact: See README.md for citation and contact information
+
+Generated: November 2024
+Based on: "The Representation Theory of Neural Networks" by Armenta & Jodoin

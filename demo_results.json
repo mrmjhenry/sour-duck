@@ -1,0 +1,32 @@
+{
+  "network_architecture": [
+    10,
+    20,
+    10,
+    2
+  ],
+  "total_parameters": 420,
+  "moduli_dimension": 390,
+  "pruning_results": [
+    {
+      "ratio": 0.3,
+      "sparsity": 0.3,
+      "remaining_params": 294
+    },
+    {
+      "ratio": 0.5,
+      "sparsity": 0.5,
+      "remaining_params": 210
+    },
+    {
+      "ratio": 0.7,
+      "sparsity": 0.7,
+      "remaining_params": 126
+    }
+  ],
+  "coordinate_stats": {
+    "total": 420,
+    "avg_usage": 0.4105000000000001,
+    "avg_importance": 0.1594825686174853
+  }
+}
