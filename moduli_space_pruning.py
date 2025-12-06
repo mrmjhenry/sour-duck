@@ -425,6 +425,7 @@ class ModuliSpacePruner:
         total_pruned = 0
         coords_found = 0
         coords_not_found = 0
+        layer_usage = {}  # Track how many coordinates per layer
 
         for coord in prunable_coords:
             if total_pruned >= target_pruned:
@@ -446,18 +447,22 @@ class ModuliSpacePruner:
                     if layer_name in pruning_masks:
                         found = True
                         coords_found += 1
+                        layer_usage[layer_name] = layer_usage.get(layer_name, 0) + 1
+
                         mask = pruning_masks[layer_name]
                         if mask.numel() > 0:
                             # Prune multiple weights per coordinate to achieve target ratio
                             flat_mask = mask.view(-1)
                             remaining = min(weights_per_coord, target_pruned - total_pruned)
 
+                            pruned_this_coord = 0
                             # Find indices to prune (starting from edge_idx position)
                             for i in range(remaining):
                                 flat_idx = (edge_idx + i) % mask.numel()
                                 if flat_mask[flat_idx] == 1:  # Only prune if not already pruned
                                     flat_mask[flat_idx] = 0
                                     total_pruned += 1
+                                    pruned_this_coord += 1
                     else:
                         coords_not_found += 1
                     break
@@ -467,6 +472,14 @@ class ModuliSpacePruner:
 
         print(f"  Coordinates found in masks: {coords_found}")
         print(f"  Coordinates not found: {coords_not_found}")
+        print(f"  Unique layers targeted: {len(layer_usage)}")
+        if len(layer_usage) <= 10:
+            for layer, count in sorted(layer_usage.items(), key=lambda x: x[1], reverse=True):
+                print(f"    {layer}: {count} coords")
+        else:
+            print(f"    Top 5 layers:")
+            for layer, count in sorted(layer_usage.items(), key=lambda x: x[1], reverse=True)[:5]:
+                print(f"      {layer}: {count} coords")
 
         print(f"  Actually pruned: {total_pruned:,} weights")
 
