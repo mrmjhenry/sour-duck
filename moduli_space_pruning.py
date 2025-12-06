@@ -176,6 +176,22 @@ class ModuliSpaceAnalyzer:
         self.quiver = QuiverRepresentation(network)
         self.data_rep = DataRepresentation(network, device)
         self.coordinate_stats = {}
+
+    @property
+    def total_coordinates(self):
+        """Total number of coordinates (edges in quiver)"""
+        return len(self.quiver.edges)
+
+    @property
+    def moduli_dimension(self):
+        """Moduli space dimension: #E - #Ṽ"""
+        return len(self.quiver.edges) - len(self.quiver.vertices)
+
+    @property
+    def coordinates(self):
+        """List of analyzed ModuliCoordinate objects"""
+        return list(self.coordinate_stats.values())
+
         
     def analyze_dataset(self, dataloader, max_samples=1000):
         """Analyze coordinate usage across dataset"""
