@@ -408,11 +408,18 @@ class ModuliSpacePruner:
         # Get coordinates sorted by importance (lowest first)
         prunable_coords = self.analyzer.get_prunable_coordinates(pruning_ratio, strategy)
 
+        # Debug output
+        print(f"  Total weights: {total_weights:,}")
+        print(f"  Target pruned: {target_pruned:,} ({pruning_ratio*100:.0f}%)")
+        print(f"  Prunable coordinates: {len(prunable_coords):,}")
+
         # Calculate how many weights to prune per coordinate to achieve target
         if len(prunable_coords) > 0:
             weights_per_coord = max(1, target_pruned // len(prunable_coords))
         else:
             weights_per_coord = 1
+
+        print(f"  Weights per coordinate: {weights_per_coord:,}")
 
         # Map coordinates to weights and create masks
         total_pruned = 0
@@ -446,6 +453,8 @@ class ModuliSpacePruner:
                                     flat_mask[flat_idx] = 0
                                     total_pruned += 1
                     break
+
+        print(f"  Actually pruned: {total_pruned:,} weights")
 
         # Apply masks to network
         self._apply_masks(pruning_masks)
