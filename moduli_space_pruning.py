@@ -423,11 +423,15 @@ class ModuliSpacePruner:
 
         # Map coordinates to weights and create masks
         total_pruned = 0
+        coords_found = 0
+        coords_not_found = 0
+
         for coord in prunable_coords:
             if total_pruned >= target_pruned:
                 break
 
             # Find corresponding layer
+            found = False
             for edge_tuple in self.analyzer.quiver.edges:
                 # Robust unpacking
                 if len(edge_tuple) == 3:
@@ -440,6 +444,8 @@ class ModuliSpacePruner:
 
                 if edge_idx == coord.edge_idx:
                     if layer_name in pruning_masks:
+                        found = True
+                        coords_found += 1
                         mask = pruning_masks[layer_name]
                         if mask.numel() > 0:
                             # Prune multiple weights per coordinate to achieve target ratio
@@ -452,7 +458,15 @@ class ModuliSpacePruner:
                                 if flat_mask[flat_idx] == 1:  # Only prune if not already pruned
                                     flat_mask[flat_idx] = 0
                                     total_pruned += 1
+                    else:
+                        coords_not_found += 1
                     break
+
+            if not found:
+                coords_not_found += 1
+
+        print(f"  Coordinates found in masks: {coords_found}")
+        print(f"  Coordinates not found: {coords_not_found}")
 
         print(f"  Actually pruned: {total_pruned:,} weights")
 
