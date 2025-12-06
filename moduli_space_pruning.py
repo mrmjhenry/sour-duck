@@ -372,24 +372,39 @@ class ModuliSpacePruner:
     def prune(self, pruning_ratio=0.5, strategy='combined'):
         """
         Prune network based on moduli space coordinate analysis.
-        
+
         Returns:
             pruned_network: The pruned network
             pruning_mask: Binary mask indicating pruned weights
         """
-        prunable_coords = self.analyzer.get_prunable_coordinates(pruning_ratio, strategy)
-        
         # Create pruning masks for each layer
         pruning_masks = {}
-        
+
         for name, module in self.network.named_modules():
             if isinstance(module, (nn.Linear, nn.Conv2d)):
                 mask = torch.ones_like(module.weight.data)
                 pruning_masks[name] = mask
-        
+
+        # Calculate total number of prunable weights
+        total_weights = sum(mask.numel() for mask in pruning_masks.values())
+        target_pruned = int(total_weights * pruning_ratio)
+
+        # Get coordinates sorted by importance (lowest first)
+        prunable_coords = self.analyzer.get_prunable_coordinates(pruning_ratio, strategy)
+
+        # Calculate how many weights to prune per coordinate to achieve target
+        if len(prunable_coords) > 0:
+            weights_per_coord = max(1, target_pruned // len(prunable_coords))
+        else:
+            weights_per_coord = 1
+
         # Map coordinates to weights and create masks
+        total_pruned = 0
         for coord in prunable_coords:
-            # Find corresponding layer and weight position
+            if total_pruned >= target_pruned:
+                break
+
+            # Find corresponding layer
             for edge_tuple in self.analyzer.quiver.edges:
                 # Robust unpacking
                 if len(edge_tuple) == 3:
@@ -399,20 +414,26 @@ class ModuliSpacePruner:
                     edge_info = None
                 else:
                     continue
-                    
+
                 if edge_idx == coord.edge_idx:
                     if layer_name in pruning_masks:
-                        # Simplified: prune random position for demonstration
-                        # In practice, would map exact coordinate to weight position
                         mask = pruning_masks[layer_name]
                         if mask.numel() > 0:
-                            flat_idx = edge_idx % mask.numel()
-                            mask.view(-1)[flat_idx] = 0
+                            # Prune multiple weights per coordinate to achieve target ratio
+                            flat_mask = mask.view(-1)
+                            remaining = min(weights_per_coord, target_pruned - total_pruned)
+
+                            # Find indices to prune (starting from edge_idx position)
+                            for i in range(remaining):
+                                flat_idx = (edge_idx + i) % mask.numel()
+                                if flat_mask[flat_idx] == 1:  # Only prune if not already pruned
+                                    flat_mask[flat_idx] = 0
+                                    total_pruned += 1
                     break
-        
+
         # Apply masks to network
         self._apply_masks(pruning_masks)
-        
+
         return self.network, pruning_masks
     
     def _apply_masks(self, masks):
