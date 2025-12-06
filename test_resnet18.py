@@ -230,7 +230,7 @@ def test_pruning():
         # Count pruned parameters
         total_params = 0
         pruned_params = 0
-        for mask in masks:
+        for layer_name, mask in masks.items():
             total_params += mask.numel()
             pruned_params += (mask == 0).sum().item()
 
