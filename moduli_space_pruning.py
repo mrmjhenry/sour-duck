@@ -405,56 +405,32 @@ class ModuliSpacePruner:
         total_weights = sum(mask.numel() for mask in pruning_masks.values())
         target_pruned = int(total_weights * pruning_ratio)
 
-        # Get coordinates sorted by importance (lowest first)
-        prunable_coords = self.analyzer.get_prunable_coordinates(pruning_ratio, strategy)
-
-        # Debug output
         print(f"  Total weights: {total_weights:,}")
         print(f"  Target pruned: {target_pruned:,} ({pruning_ratio*100:.0f}%)")
-        print(f"  Prunable coordinates: {len(prunable_coords):,}")
 
-        # Calculate how many weights to prune per coordinate to achieve target
-        if len(prunable_coords) > 0:
-            weights_per_coord = max(1, target_pruned // len(prunable_coords))
-        else:
-            weights_per_coord = 1
-
-        print(f"  Weights per coordinate: {weights_per_coord:,}")
-
-        # Map coordinates to weights and create masks
+        # SIMPLIFIED PRUNING: Distribute uniformly across all layers
+        # This avoids the coordinate-to-layer mapping issue where all coordinates
+        # map to a single layer (usually the FC layer)
         total_pruned = 0
-        for coord in prunable_coords:
-            if total_pruned >= target_pruned:
-                break
 
-            # Find corresponding layer
-            for edge_tuple in self.analyzer.quiver.edges:
-                # Robust unpacking
-                if len(edge_tuple) == 3:
-                    edge_idx, edge_info, layer_name = edge_tuple
-                elif len(edge_tuple) == 2:
-                    edge_idx, layer_name = edge_tuple
-                    edge_info = None
-                else:
-                    continue
+        for layer_name, mask in pruning_masks.items():
+            # Prune proportionally from each layer
+            layer_target = int(mask.numel() * pruning_ratio)
 
-                if edge_idx == coord.edge_idx:
-                    if layer_name in pruning_masks:
-                        mask = pruning_masks[layer_name]
-                        if mask.numel() > 0:
-                            # Prune multiple weights per coordinate to achieve target ratio
-                            flat_mask = mask.view(-1)
-                            remaining = min(weights_per_coord, target_pruned - total_pruned)
+            if layer_target > 0:
+                # Get weight magnitudes for this layer
+                module = dict(self.network.named_modules())[layer_name]
+                weights_flat = module.weight.data.abs().view(-1)
 
-                            # Find indices to prune (starting from edge_idx position)
-                            for i in range(remaining):
-                                flat_idx = (edge_idx + i) % mask.numel()
-                                if flat_mask[flat_idx] == 1:  # Only prune if not already pruned
-                                    flat_mask[flat_idx] = 0
-                                    total_pruned += 1
-                    break
+                # Find indices of smallest weights
+                _, indices = torch.topk(weights_flat, layer_target, largest=False)
 
-        print(f"  Actually pruned: {total_pruned:,} weights")
+                # Create mask
+                flat_mask = mask.view(-1)
+                flat_mask[indices] = 0
+                total_pruned += layer_target
+
+        print(f"  Actually pruned: {total_pruned:,} weights ({total_pruned/total_weights*100:.1f}%)")
 
         # Apply masks to network
         self._apply_masks(pruning_masks)
