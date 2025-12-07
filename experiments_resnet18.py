@@ -28,6 +28,7 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
+import datetime
 
 from resnet18_cifar import create_resnet18_cifar10
 from moduli_space_pruning import ModuliSpaceAnalyzer, ModuliSpacePruner
@@ -55,12 +56,39 @@ class ResNet18ExperimentRunner(ExperimentRunner):
         print(f"Total parameters: {model.get_num_parameters():,}")
         return model
 
+    def prepare_data(self, dataset='CIFAR10', batch_size=128):
+        """Prepare datasets"""
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        ])
+        
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        ])
+        
+        if dataset == 'CIFAR10':
+            trainset = torchvision.datasets.CIFAR10(
+                root='./data', train=True, download=True, transform=transform_train)
+            testset = torchvision.datasets.CIFAR10(
+                root='./data', train=False, download=True, transform=transform_test)
+        else:
+            raise ValueError(f"Unknown dataset: {dataset}")
+        
+        trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
+        testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
+        
+        return trainloader, testloader
+
     def run_resnet18_experiment(
         self,
         pruning_method: str = 'moduli_space',
         pruning_ratio: float = 0.5,
-        pretrain_epochs: int = 30,
-        finetune_epochs: int = 10,
+        pretrain_epochs: int = 1,
+        finetune_epochs: int = 1,
         batch_size: int = 128
     ) -> Dict:
         """
@@ -91,21 +119,20 @@ class ResNet18ExperimentRunner(ExperimentRunner):
         network = self.create_resnet18().to(device)
 
         # Load data
-        train_loader, test_loader = self.load_cifar10(batch_size=batch_size)
+        train_loader, test_loader = self.prepare_data()
 
         # Pre-train
         print(f"\n1. Pre-training for {pretrain_epochs} epochs...")
-        pretrain_acc, pretrain_time = self.train_network(
-            network, train_loader, test_loader, epochs=pretrain_epochs
+        network, train_losses = self.train_network(
+            network, train_loader, pretrain_epochs
         )
+        pretrain_acc, pretrain_time = self.evaluate_network(network, test_loader)
         print(f"   Pre-train accuracy: {pretrain_acc:.2f}%")
         results['pretrain_acc'] = pretrain_acc
-        results['pretrain_time'] = pretrain_time
 
         # Measure baseline inference time
-        baseline_time = self.measure_inference_time(network, test_loader)
-        print(f"   Baseline inference time: {baseline_time:.4f}s")
-        results['baseline_inference_time'] = baseline_time
+        print(f"   Baseline inference time: {pretrain_time:.4f}s")
+        results['baseline_inference_time'] = pretrain_time
 
         # Prune
         print(f"\n2. Pruning with {pruning_method} (ratio={pruning_ratio})...")
@@ -146,30 +173,35 @@ class ResNet18ExperimentRunner(ExperimentRunner):
         results['prune_time'] = prune_time
 
         # Calculate actual sparsity
-        total_params = sum(m.numel() for m in masks)
-        zero_params = sum((m == 0).sum().item() for m in masks)
+        total_params = 0
+        zero_params = 0
+        for layer_name, mask in masks.items():
+            total_params += mask.numel()
+            zero_params += (mask == 0).sum().item()
+
         actual_sparsity = zero_params / total_params
         print(f"   Actual sparsity: {actual_sparsity:.2%}")
         results['sparsity'] = actual_sparsity
 
         # Evaluate immediately after pruning
         pruned_network.eval()
-        immediate_acc = self.evaluate_network(pruned_network, test_loader)
+        immediate_acc, immediate_time = self.evaluate_network(pruned_network, test_loader)
         print(f"   Immediate accuracy (before fine-tuning): {immediate_acc:.2f}%")
         results['immediate_acc'] = immediate_acc
 
         # Fine-tune
         print(f"\n3. Fine-tuning for {finetune_epochs} epochs...")
-        final_acc, finetune_time = self.train_network(
-            pruned_network, train_loader, test_loader, epochs=finetune_epochs
+        final_network, final_network_losses = self.train_network(
+            #pruned_network, train_loader, test_loader, epochs=finetune_epochs
+            pruned_network, train_loader, epochs=finetune_epochs
         )
+
+        final_acc, pruned_time = self.evaluate_network(final_network, test_loader)
         print(f"   Final accuracy: {final_acc:.2f}%")
         results['final_acc'] = final_acc
-        results['finetune_time'] = finetune_time
 
         # Measure pruned inference time
-        pruned_time = self.measure_inference_time(pruned_network, test_loader)
-        speedup = baseline_time / pruned_time
+        speedup = pretrain_time / pruned_time
         print(f"   Pruned inference time: {pruned_time:.4f}s")
         print(f"   Speedup: {speedup:.2f}x")
         results['pruned_inference_time'] = pruned_time
@@ -323,7 +355,10 @@ def main():
 
         # Save and plot
         df = pd.DataFrame(results)
-        df.to_csv('results/resnet18_full_results.csv', index=False)
+        now = datetime.now()
+        date_str = now.isoformat(sep='', timespec='milliseconds')
+        fname = f"results/resnet18_full_results-{date_str}.csv"
+        df.to_csv(fname, index=False)
         print(f"\n✓ Results saved to results/resnet18_full_results.csv")
 
         # Generate plots
@@ -338,8 +373,8 @@ def main():
             pretrain_epochs = 5
             finetune_epochs = 3
         else:
-            pretrain_epochs = 20
-            finetune_epochs = 10
+            pretrain_epochs = 1
+            finetune_epochs = 1
 
         result = runner.run_resnet18_experiment(
             pruning_method=args.method,
