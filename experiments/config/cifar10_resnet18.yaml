@@ -1,0 +1,43 @@
+# CIFAR-10 with ResNet-18 Configuration
+# Quick experiment for testing
+
+experiment:
+  name: "cifar10_resnet18_quick"
+  output_dir: "experiments/results/cifar10_resnet18"
+  seed: 42
+
+dataset:
+  name: "CIFAR10"
+  batch_size: 128
+
+model:
+  architecture: "ResNet18"
+  pretrained: false
+
+training:
+  epochs: 50
+  learning_rate: 0.1
+  lr_schedule: "cosine"
+
+pruning:
+  methods:
+    - "moduli_space"
+    - "magnitude"
+    - "random"
+
+  sparsity_levels:
+    - 0.3
+    - 0.5
+    - 0.7
+
+  finetune_epochs: 10
+
+  moduli_space:
+    max_samples: 500
+    strategy: "combined"
+    ablation:
+      enabled: true
+
+evaluation:
+  moduli_analysis:
+    enabled: true
