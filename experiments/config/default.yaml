@@ -1,0 +1,111 @@
+# Default Experiment Configuration
+# This file defines all configurable parameters for pruning experiments
+
+# Experiment metadata
+experiment:
+  name: "moduli_space_comparison"
+  output_dir: "experiments/results"
+  seed: 42
+  device: "cuda"  # cuda, cpu, or auto
+
+# Dataset configuration
+dataset:
+  name: "CIFAR10"  # CIFAR10, CIFAR100, ImageNet
+  data_dir: "./data"
+  batch_size: 128
+  num_workers: 4
+  augmentation: true
+
+# Model configuration
+model:
+  architecture: "ResNet18"  # ResNet18, VGG16
+  pretrained: false
+  num_classes: 10  # Auto-set based on dataset
+
+# Training configuration
+training:
+  epochs: 100
+  optimizer: "SGD"  # SGD, Adam, AdamW
+  learning_rate: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+  lr_schedule: "cosine"  # cosine, step, none
+  warmup_epochs: 5
+
+# Pruning configuration
+pruning:
+  methods:
+    - "moduli_space"
+    - "magnitude"
+    - "random"
+    - "lottery_ticket"
+    - "wanda"
+
+  sparsity_levels:
+    - 0.1   # 10%
+    - 0.3   # 30%
+    - 0.5   # 50%
+    - 0.7   # 70%
+    - 0.9   # 90%
+
+  # Fine-tuning after pruning
+  finetune_epochs: 20
+  finetune_lr: 0.01
+
+  # Method-specific configurations
+  moduli_space:
+    max_samples: 1000  # Samples for coordinate analysis
+    strategy: "combined"  # combined, usage, variance, information
+
+    # Component ablation experiments
+    ablation:
+      enabled: true
+      components:
+        - "usage_only"
+        - "variance_only"
+        - "information_only"
+        - "combined"
+
+  magnitude:
+    norm: "l1"  # l1, l2
+
+  lottery_ticket:
+    iterations: 5
+    reset_weights: true
+
+  wanda:
+    # Wanda-specific parameters
+    use_activations: true
+
+# Evaluation configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "top5_accuracy"  # For ImageNet
+    - "memory_footprint"
+    - "inference_time"
+    - "flops"
+
+  # Moduli space specific analysis
+  moduli_analysis:
+    enabled: true
+    plots:
+      - "dimension_vs_architecture"
+      - "dimension_vs_prunable"
+      - "importance_distribution"
+      - "layer_wise_pruning"
+
+# Logging configuration
+logging:
+  wandb:
+    enabled: false
+    project: "neural-pruning"
+    entity: null
+
+  tensorboard:
+    enabled: true
+    log_dir: "experiments/results/tensorboard"
+
+  save_checkpoints: true
+  checkpoint_frequency: 10  # epochs
+  save_best_only: true
